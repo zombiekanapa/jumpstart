@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ JUMPSTART ⚡</title>
+    <style>
+        :root {
+            /* Theme 1: Retro Mint (Default) */
+            --bg-gradient: linear-gradient(135deg, #e3f2fd, #e8f5e9);
+            --card-bg: #f1f8e9;
+            --primary: #2e7d32;
+            --primary-light: #a5d6a7;
+            --accent: #1b5e20;
+            --text-color: #2e4a3e;
+            --dial-face: #f9fdf9;
+            --dial-border: #b0bec5;
+            --shadow-color: rgba(46, 125, 50, 0.15);
+            --font-family: 'Courier New', Courier, monospace, sans-serif;
+        }
+
+        [data-theme="warm-sage"] {
+            --bg-gradient: linear-gradient(135deg, #efebe9, #f5f5f5);
+            --card-bg: #efebe9;
+            --primary: #6d4c41;
+            --primary-light: #d7ccc8;
+            --accent: #3e2723;
+            --text-color: #4e342e;
+            --dial-face: #faf8f7;
+            --dial-border: #bcaaa4;
+            --shadow-color: rgba(109, 76, 65, 0.15);
+        }
+
+        [data-theme="high-contrast-lime"] {
+            --bg-gradient: linear-gradient(135deg, #111, #000);
+            --card-bg: #111;
+            --primary: #39ff14;
+            --primary-light: #1b5e20;
+            --accent: #39ff14;
+            --text-color: #39ff14;
+            --dial-face: #000;
+            --dial-border: #39ff14;
+            --shadow-color: rgba(57, 255, 20, 0.3);
+            --font-family: sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            transition: background 0.3s ease;
+            color: var(--text-color);
+        }
+
+        /* App Container mimicking physical device templates */
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--card-bg);
+            border-radius: 30px;
+            box-shadow: 0 15px 35px var(--shadow-color), inset 0 -3px 8px rgba(0,0,0,0.1);
+            border: 4px solid var(--dial-border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Utility Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Headers */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 5px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-align: center;
+            flex-grow: 1;
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
+        }
+
+        [data-theme="high-contrast-lime"] .logo {
+            text-shadow: none;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: transform 0.2s;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* The Kitchen Clock Dial Visualizer */
+        .dial-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin: 10px 0;
+        }
+
+        .kitchen-clock {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: var(--dial-face);
+            border: 10px solid var(--dial-border);
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.15), 0 6px 12px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* SVG Overlay for sweeping gauge indicators */
+        .clock-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg); /* align zero to top center */
+            pointer-events: none;
+        }
+
+        .progress-slice {
+            fill: var(--primary);
+            opacity: 0.45;
+            transition: d 0.2s linear;
+        }
+
+        /* Clock Numbers and ticks */
+        .clock-number {
+            position: absolute;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-color);
+            transform: translate(-50%, -50%);
+        }
+
+        .clock-center-knob {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #f0f0f0 0%, #9e9e9e 100%);
+            border: 3px solid var(--dial-border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            z-index: 10;
+            position: absolute;
+        }
+
+        .pointer-triangle {
+            position: absolute;
+            top: -16px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 16px solid var(--primary);
+            z-index: 11;
+        }
+
+        /* Input Elements */
+        .task-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--dial-border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--text-color);
+            text-align: center;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .task-input:focus {
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        /* Minute Preset Buttons */
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 10px 0;
+            font-size: 1.1rem;
+            font-weight: bold;
+            background: var(--primary-light);
+            border: 2px solid var(--primary);
+            color: var(--accent);
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 3px 0px var(--primary);
+            transition: all 0.1s;
+        }
+
+        .preset-btn:active, .preset-btn.active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        /* System Control Buttons */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .control-btn {
+            font-size: 1.8rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--primary);
+            transition: transform 0.1s;
+        }
+
+        .control-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Action Buttons */
+        .action-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid var(--primary);
+            transition: transform 0.1s;
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 0 var(--accent);
+        }
+
+        .btn-reset {
+            background: transparent;
+            color: var(--text-color);
+            box-shadow: 0 4px 0 var(--dial-border);
+        }
+
+        .btn-action:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        /* Footer Stats */
+        footer {
+            border-top: 2px dashed var(--dial-border);
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        /* Sub-View Overlays (Settings, Logs, Splashes) */
+        .sub-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--card-bg);
+            border-radius: 26px;
+            padding: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--dial-border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Settings CSS */
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--dial-border);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--primary-light);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--primary);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--primary);
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+            background-color: #fff;
+        }
+
+        select {
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            background: var(--dial-face);
+            color: var(--text-color);
+            outline: none;
+        }
+
+        /* Log List CSS */
+        .log-aggregate {
+            background: var(--primary-light);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .log-item {
+            background: var(--dial-face);
+            border: 1px solid var(--dial-border);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+
+        .log-item-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+
+        /* Celebration Screen overlay */
+        .celebrate-screen {
+            background: var(--accent);
+            color: #fff;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .celebrate-badge {
+            font-size: 4rem;
+            animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="app">
+        <!-- HEADER -->
+        <header>
+            <button class="icon-btn" id="btn-view-logs" title="View Logs">📜</button>
+            <div class="logo">⚡ JUMPSTART ⚡</div>
+            <button class="icon-btn" id="btn-view-settings" title="Settings">⚙️</button>
+        </header>
+
+        <!-- KITCHEN CLOCK VISUALIZER -->
+        <div class="dial-container">
+            <div class="pointer-triangle"></div>
+            <div class="kitchen-clock" id="clock-face">
+                <svg class="clock-svg" viewBox="0 0 200 200">
+                    <path id="svg-slice" class="progress-slice" d="" />
+                </svg>
+                <div class="clock-center-knob"></div>
+            </div>
+        </div>
+
+        <!-- USER NOTE TASK DESCRIPTION -->
+        <input type="text" class="task-input" id="task-note" placeholder="What are you starting?" />
+
+        <!-- PRESET BUTTONS (MINUTES) -->
+        <div class="presets-grid">
+            <button class="preset-btn" data-min="3">3</button>
+            <button class="preset-btn" data-min="5">5</button>
+            <button class="preset-btn" data-min="15">15</button>
+            <button class="preset-btn" data-min="30">30</button>
+            <button class="preset-btn" data-min="60">60</button>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="controls">
+            <button class="control-btn" id="btn-play-pause" title="Play/Pause">▶️</button>
+            <button class="control-btn" id="btn-reset" title="Reset">🔄</button>
+        </div>
+
+        <!-- ACTION ROW -->
+        <div class="action-row">
+            <button class="btn-action btn-save" id="btn-save-log">SAVE EXP LOG</button>
+            <button class="btn-action btn-reset" id="btn-cancel-session">SKIP</button>
+        </div>
+
+        <!-- FOOTER STATS -->
+        <footer>
+            <div>Today: <span id="stat-today-exp">0</span> EXP</div>
+            <div>Total Completed: <span id="stat-total-time">0</span> min</div>
+        </footer>
+
+        <!-- SETTINGS VIEW PANEL -->
+        <div class="sub-panel hidden" id="panel-settings">
+            <div class="panel-header">
+                <h2>Settings</h2>
+                <button class="icon-btn close-panel-btn">❌</button>
+            </div>
+            <div class="setting-item">
+                <span>Sound Alarm</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="settings-sound" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>Haptic Ticks</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="settings-haptics" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>Theme Preset</span>
+                <select id="settings-theme">
+                    <option value="retro-mint">Retro Mint</option>
+                    <option value="warm-sage">Warm Sage</option>
+                    <option value="high-contrast-lime">Tactical Lime</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <span>Auto-Suggest Next</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="settings-autosuggest" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- LOGS VIEW PANEL -->
+        <div class="sub-panel hidden" id="panel-logs">
+            <div class="panel-header">
+                <h2>Activity Log</h2>
+                <button class="icon-btn close-panel-btn">❌</button>
+            </div>
+            <div class="log-aggregate">
+                Weekly Cumulative: <span id="weekly-total">0</span> EXP
+            </div>
+            <div class="log-list" id="log-list-container">
+                <!-- Log entries inserted here -->
+            </div>
+        </div>
+
+        <!-- CELEBRATION / EXP EARNED OVERLAY -->
+        <div class="sub-panel celebrate-screen hidden" id="panel-celebration">
+            <div class="celebrate-badge">🎉</div>
+            <h1 id="celebrate-congrats">Well done!</h1>
+            <p id="celebrate-sub">You started and smashed that focus window!</p>
+            <div style="font-size: 1.5rem; font-weight: bold;" id="celebrate-exp">+0 EXP Earned!</div>
+            <div class="action-row" style="width: 100%; margin-top: 15px;">
+                <button class="btn-action btn-save" id="btn-popup-save">SAVE EXP LOG</button>
+                <button class="btn-action btn-reset" id="btn-popup-skip" style="background:#fff; color:#000;">SKIP</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // System Settings & State
+        let settings = {
+            sound: true,
+            haptics: true,
+            theme: 'retro-mint',
+            autoSuggest: true
+        };
+
+        let sessionState = {
+            durationMinutes: 5,
+            secondsLeft: 300,
+            isRunning: false,
+            timerId: null,
+            note: "",
+            expEarned: 0
+        };
+
+        // DOM elements
+        const app = document.getElementById('app');
+        const svgSlice = document.getElementById('svg-slice');
+        const taskNoteInput = document.getElementById('task-note');
+        const btnPlayPause = document.getElementById('btn-play-pause');
+        const btnReset = document.getElementById('btn-reset');
+        const btnSaveLog = document.getElementById('btn-save-log');
+        const btnCancelSession = document.getElementById('btn-cancel-session');
+        const statTodayExp = document.getElementById('stat-today-exp');
+        const statTotalTime = document.getElementById('stat-total-time');
+
+        // Panel managers
+        const panelSettings = document.getElementById('panel-settings');
+        const panelLogs = document.getElementById('panel-logs');
+        const panelCelebration = document.getElementById('panel-celebration');
+
+        // Init App On Load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            initDatabase();
+            generateClockNumbers();
+            selectPreset(5); // Default start preset
+            applyTheme(settings.theme);
+            updateDashboardStats();
+        });
+
+        // Generate mechanical clock ticks around clock face border
+        function generateClockNumbers() {
+            const face = document.getElementById('clock-face');
+            const values = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+            const radius = 95; // Radius layout positioning inside 250px container
+
+            values.forEach(val => {
+                const num = document.createElement('div');
+                num.className = 'clock-number';
+                num.innerText = val;
+                
+                // Angle calculation (subtracting 90 deg to set 0 at exact top)
+                const angle = (val * 6 * Math.PI) / 180 - Math.PI / 2;
+                const x = 125 + radius * Math.cos(angle);
+                const y = 125 + radius * Math.sin(angle);
+                
+                num.style.left = `${x}px`;
+                num.style.top = `${y}px`;
+                face.appendChild(num);
+            });
+        }
+
+        // Draw the sweeping 'kitchen-slice' progress segment[cite: 1, 2]
+        function drawClockProgress(percent) {
+            const radius = 80;
+            const cx = 100;
+            const cy = 100;
+            const angle = percent * 360;
+
+            const x = cx + radius * Math.cos((angle - 90) * Math.PI / 180);
+            const y = cy + radius * Math.sin((angle - 90) * Math.PI / 180);
+
+            const largeArcFlag = angle > 180 ? 1 : 0;
+
+            let pathData = '';
+            if (percent > 0) {
+                // Draw dynamic sector wedge back to top center (0, -radius)
+                pathData = `M ${cx} ${cy} L 100 20 A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x} ${y} Z`;
+            }
+            svgSlice.setAttribute('d', pathData);
+        }
+
+        // Interactive Preset Buttons[cite: 1, 2]
+        document.querySelectorAll('.preset-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const minutes = parseInt(button.dataset.min);
+                selectPreset(minutes);
+                triggerHaptic();
+            });
+        });
+
+        function selectPreset(minutes) {
+            if (sessionState.isRunning) resetTimer();
+            sessionState.durationMinutes = minutes;
+            sessionState.secondsLeft = minutes * 60;
+            
+            // Highlight active preset
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.min) === minutes);
+            });
+
+            updateVisualizer();
+        }
+
+        function updateVisualizer() {
+            const totalSec = sessionState.durationMinutes * 60;
+            const percentage = totalSec > 0 ? (sessionState.secondsLeft / totalSec) : 0;
+            drawClockProgress(percentage);
+        }
+
+        // Countdown Motor Core
+        btnPlayPause.addEventListener('click', () => {
+            if (sessionState.isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+            triggerHaptic();
+        });
+
+        btnReset.addEventListener('click', () => {
+            resetTimer();
+            triggerHaptic();
+        });
+
+        function startTimer() {
+            sessionState.isRunning = true;
+            btnPlayPause.innerText = '⏸️';
+            sessionState.timerId = setInterval(() => {
+                sessionState.secondsLeft--;
+                updateVisualizer();
+
+                // Tactile feedback ticking
+                if (sessionState.secondsLeft % 60 === 0) {
+                    triggerHaptic();
+                }
+
+                if (sessionState.secondsLeft <= 0) {
+                    completeSession();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            sessionState.isRunning = false;
+            btnPlayPause.innerText = '▶️';
+            clearInterval(sessionState.timerId);
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            sessionState.secondsLeft = sessionState.durationMinutes * 60;
+            updateVisualizer();
+        }
+
+        // Session complete actions[cite: 1, 3]
+        function completeSession() {
+            pauseTimer();
+            sessionState.expEarned = sessionState.durationMinutes; // Completed minutes = EXP[cite: 1, 3]
+            playRingBell();
+            triggerHaptic();
+
+            // Display Celebration Splash Screen
+            document.getElementById('celebrate-exp').innerText = `+${sessionState.expEarned} EXP Earned!`;
+            
+            const congratulationPhrases = [
+                "Awesome Start!", "Task Smashed!", "Excellent Focus!", "You Beat the Friction!", "Keep the Flow Going!"
+            ];
+            document.getElementById('celebrate-congrats').innerText = congratulationPhrases[Math.floor(Math.random() * congratulationPhrases.length)];
+            
+            panelCelebration.classList.remove('hidden');
+        }
+
+        // Audio Effects Engine[cite: 1]
+        function playRingBell() {
+            if (!settings.sound) return;
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Dual chime synthesis to sound like a physical mechanical bell
+            const osc1 = context.createOscillator();
+            const osc2 = context.createOscillator();
+            const gainNode = context.createGain();
+
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(880, context.currentTime); // High resonant ping
+            
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(883, context.currentTime); // Slight detune overlay
+
+            gainNode.gain.setValueAtTime(0.5, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 1.8); // Long bell decay
+
+            osc1.connect(gainNode);
+            osc2.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            osc1.start();
+            osc2.start();
+            osc1.stop(context.currentTime + 2.0);
+            osc2.stop(context.currentTime + 2.0);
+        }
+
+        // Tactile Haptic Vibration Controller[cite: 1]
+        function triggerHaptic() {
+            if (settings.haptics && navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+        }
+
+        // Data Storage Engine (LocalStorage)[cite: 1]
+        function initDatabase() {
+            if (!localStorage.getItem('jumpstart_logs')) {
+                localStorage.setItem('jumpstart_logs', JSON.stringify([]));
+            }
+        }
+
+        function saveFocusLog() {
+            const logs = JSON.parse(localStorage.getItem('jumpstart_logs'));
+            const sessionLog = {
+                id: 'session-' + Date.now(),
+                timestamp: new Date().toISOString(),
+                duration: sessionState.durationMinutes,
+                exp: sessionState.expEarned,
+                note: taskNoteInput.value.trim() || 'Focus Jumpstart'
+            };
+
+            logs.push(sessionLog);
+            localStorage.setItem('jumpstart_logs', JSON.stringify(logs));
+            
+            // Cleanup input fields
+            taskNoteInput.value = '';
+            
+            // Auto-Suggest progression[cite: 1, 3]
+            if (settings.autoSuggest) {
+                const progressions = { 3: 5, 5: 15, 15: 30, 30: 60, 60: 3 };
+                const nextPreset = progressions[sessionState.durationMinutes] || 5;
+                selectPreset(nextPreset);
+            } else {
+                resetTimer();
+            }
+
+            updateDashboardStats();
+            panelCelebration.classList.add('hidden');
+        }
+
+        function updateDashboardStats() {
+            const logs = JSON.parse(localStorage.getItem('jumpstart_logs')) || [];
+            const todayStr = new Date().toDateString();
+
+            let todayExp = 0;
+            let totalTime = 0;
+
+            logs.forEach(item => {
+                const itemDate = new Date(item.timestamp).toDateString();
+                if (itemDate === todayStr) {
+                    todayExp += item.exp;
+                }
+                totalTime += item.duration;
+            });
+
+            statTodayExp.innerText = todayExp;
+            statTotalTime.innerText = totalTime;
+        }
+
+        // Screen Log UI Builders
+        function renderLogEntries() {
+            const logs = JSON.parse(localStorage.getItem('jumpstart_logs')) || [];
+            const container = document.getElementById('log-list-container');
+            const weeklyTotalEl = document.getElementById('weekly-total');
+
+            container.innerHTML = '';
+            
+            // Filter logs for the last 7 days to show weekly cumulative stats
+            const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            let weeklyExpSum = 0;
+
+            // Render list (most recent first)
+            const sortedLogs = [...logs].reverse();
+
+            if (sortedLogs.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 20px;">No saved logs found yet!</p>';
+                weeklyTotalEl.innerText = 0;
+                return;
+            }
+
+            sortedLogs.forEach(item => {
+                const itemDate = new Date(item.timestamp);
+                if (itemDate.getTime() > sevenDaysAgo) {
+                    weeklyExpSum += item.exp;
+                }
+
+                const dateStr = itemDate.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+                const timeStr = itemDate.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'});
+
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                logItem.innerHTML = `
+                    <div class="log-item-header">
+                        <span>${dateStr} • ${timeStr}</span>
+                        <span>+${item.exp} EXP</span>
+                    </div>
+                    <div><strong>${item.note}</strong> (${item.duration} min)</div>
+                `;
+                container.appendChild(logItem);
+            });
+
+            weeklyTotalEl.innerText = weeklyExpSum;
+        }
+
+        // Log Flow Buttons
+        btnSaveLog.addEventListener('click', () => {
+            if (sessionState.expEarned > 0) {
+                saveFocusLog();
+            } else {
+                alert("Start and finish a timer interval first to claim EXP!");
+            }
+        });
+
+        btnCancelSession.addEventListener('click', () => {
+            resetTimer();
+            taskNoteInput.value = '';
+            sessionState.expEarned = 0;
+        });
+
+        // Splash screen decision redirects
+        document.getElementById('btn-popup-save').addEventListener('click', saveFocusLog);
+        document.getElementById('btn-popup-skip').addEventListener('click', () => {
+            panelCelebration.classList.add('hidden');
+            resetTimer();
+        });
+
+        // Overlay Navigation Controls
+        document.getElementById('btn-view-settings').addEventListener('click', () => {
+            panelSettings.classList.remove('hidden');
+        });
+
+        document.getElementById('btn-view-logs').addEventListener('click', () => {
+            renderLogEntries();
+            panelLogs.classList.remove('hidden');
+        });
+
+        document.querySelectorAll('.close-panel-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                panelSettings.classList.add('hidden');
+                panelLogs.classList.add('hidden');
+            });
+        });
+
+        // Preference Settings Mechanics[cite: 1]
+        function loadSettings() {
+            const saved = localStorage.getItem('jumpstart_settings');
+            if (saved) {
+                settings = JSON.parse(saved);
+            }
+            // Populate DOM settings page elements
+            document.getElementById('settings-sound').checked = settings.sound;
+            document.getElementById('settings-haptics').checked = settings.haptics;
+            document.getElementById('settings-theme').value = settings.theme;
+            document.getElementById('settings-autosuggest').checked = settings.autoSuggest;
+        }
+
+        function saveSettings() {
+            settings.sound = document.getElementById('settings-sound').checked;
+            settings.haptics = document.getElementById('settings-haptics').checked;
+            settings.theme = document.getElementById('settings-theme').value;
+            settings.autoSuggest = document.getElementById('settings-autosuggest').checked;
+
+            localStorage.setItem('jumpstart_settings', JSON.stringify(settings));
+            applyTheme(settings.theme);
+        }
+
+        // Apply visual themes dynamically
+        function applyTheme(themeName) {
+            document.body.removeAttribute('data-theme');
+            if (themeName !== 'retro-mint') {
+                document.body.setAttribute('data-theme', themeName);
+            }
+        }
+
+        // Setting Listeners
+        document.getElementById('settings-sound').addEventListener('change', saveSettings);
+        document.getElementById('settings-haptics').addEventListener('change', saveSettings);
+        document.getElementById('settings-theme').addEventListener('change', saveSettings);
+        document.getElementById('settings-autosuggest').addEventListener('change', saveSettings);
+    </script>
+</body>
+</html>
